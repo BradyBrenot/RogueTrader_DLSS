@@ -360,6 +360,18 @@ static void Initialize(ID3D11Device* device, ID3D11DeviceContext* immediateConte
             first = false;
         }
     });
+    
+    DXGI::On_ResizeBuffers([]() {
+        if (const NVSDK_NGX_D3D11_DLSS_Eval_Params* params = _dlssState.PendingEvalParams.get())
+        {
+            params->Feature.pInColor->Release();
+            params->Feature.pInOutput->Release();
+            params->pInDepth->Release();
+            params->pInMotionVectors->Release();
+
+            _dlssState.PendingEvalParams.reset();
+        }
+    });
 
     _dlssState.Initialized = true;
 

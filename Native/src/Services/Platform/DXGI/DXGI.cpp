@@ -118,12 +118,16 @@ void DXGI::On_Present_After(FnPresent&& fn)
     _callbacks.Present_After.emplace_back(std::move(fn));
 }
 
+void DXGI::On_ResizeBuffers(FnVoid&& fn)
+{
+    _callbacks.ResizeBuffers.emplace_back(std::move(fn));
+}
+
 HRESULT STDMETHODCALLTYPE Hook_Present(
     IDXGISwapChain* pSwapChain,
     UINT            SyncInterval,
     UINT            Flags)
 {
-    LOG_DEBUG("Hook_Present\n");
     for (const DXGI::FnPresent& fn : _callbacks.Present_Before) {
         fn(pSwapChain);
     }
@@ -143,7 +147,6 @@ HRESULT STDMETHODCALLTYPE Hook_Present1(
     UINT                           Flags,
     const DXGI_PRESENT_PARAMETERS* pPresentParameters)
 {
-    LOG_DEBUG("Hook_Present1\n");
     for (const DXGI::FnPresent& fn : _callbacks.Present_Before) {
         fn(pSwapChain);
     }
@@ -166,8 +169,12 @@ HRESULT STDMETHODCALLTYPE Hook_ResizeBuffers(
     UINT            SwapChainFlags)
 {
     LOG_DEBUG("Hook_ResizeBuffers\n");
-    // Got a feeling there's a crash when this happens, must confirm
-    return _originals.ResizeBuffers(pSwapChain, BufferCount, Width, Height, NewFormat, SwapChainFlags);
+    HRESULT hr = _originals.ResizeBuffers(pSwapChain, BufferCount, Width, Height, NewFormat, SwapChainFlags);
+    for (const DXGI::FnVoid& fn : _callbacks.ResizeBuffers) {
+        fn();
+    }
+    
+    return hr;
 }
 
 void CheckStatus(MH_STATUS status)
