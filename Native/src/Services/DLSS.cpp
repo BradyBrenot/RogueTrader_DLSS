@@ -231,6 +231,7 @@ static void Initialize(ID3D11Device* device, ID3D11DeviceContext* immediateConte
             .LoggingCallback = [](const char* msg, NVSDK_NGX_Logging_Level level, NVSDK_NGX_Feature source) {
                 LOG(level == NVSDK_NGX_LOGGING_LEVEL_VERBOSE ? LogLevel::Debug : LogLevel::Info, "NGX: {}", msg);
             },
+            .MinimumLoggingLevel = NVSDK_NGX_LOGGING_LEVEL_VERBOSE,
             .DisableOtherLoggingSinks = true }
     };
 
