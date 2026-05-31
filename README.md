@@ -2,6 +2,8 @@
 
 Adds DLSS support to Warhammer 40k: Rogue Trader. Non-Nvidia users gain OptiScaler support.
 
+Tested as of 
+
 ## Why use?
 
 1. Improved image quality compared to FSR, especially at lower render resolution.
@@ -28,10 +30,9 @@ Adds DLSS support to Warhammer 40k: Rogue Trader. Non-Nvidia users gain OptiScal
 6. Say 'Yes' when asked if you want to "... try to use DLSS inputs ..."
 7. Run the game as explained above. You can tweak OptiScaler's settings in its control pantel (default: Insert); you still use the mod's configuration (above) to turn it on and control the scaling ratio
 
-## Known Issues
+## Bugs
 
-1. [base game bug] Some minor ghosting behind cloth, as cloth isn't included in motion vectors.
-2. [base game bug] Particles scale as the render resolution decreases.
+See [here](https://github.com/BradyBrenot/RogueTrader_DLSS/issues) for a list of known issues and to report bugs.
 
 ## Credits
 
