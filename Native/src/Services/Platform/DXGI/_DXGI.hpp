@@ -8,6 +8,7 @@ extern struct Callbacks {
     std::vector<DXGI::FnCreateSwapChain> CreateSwapChain;
     std::vector<DXGI::FnPresent> Present_Before;
     std::vector<DXGI::FnPresent> Present_After;
+    std::vector<DXGI::FnVoid> ResizeBuffers;
 } _callbacks;
 
 extern struct State {
