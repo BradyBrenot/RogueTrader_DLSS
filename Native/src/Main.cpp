@@ -1,6 +1,8 @@
 #include <Services.hpp>
 #include <Util.hpp>
 
+#include "Services/Platform/DXGI/_DXGI.hpp"
+
 using FnGetProcAddress = FARPROC(WINAPI*)(HMODULE, LPCSTR);
 FnGetProcAddress _GetProcAddress;
 FARPROC WINAPI Hook_GetProcAddress(_In_ HMODULE hModule, _In_ LPCSTR lpProcName);
@@ -23,6 +25,7 @@ BOOL APIENTRY DllMain(HMODULE module, DWORD reason, LPVOID _)
             return false;
         }
         
+        DXGI::RegisterHooks();
         RegisterDirectHooks();
 
         if (FAIL(MH_EnableHook(MH_ALL_HOOKS))) {

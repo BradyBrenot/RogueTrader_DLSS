@@ -16,16 +16,16 @@ struct {
 } _originals;
 
 Callbacks D3D11::Internal::_callbacks;
-State D3D11::Internal::_state;
+State D3D11::Internal::_d3d11State;
 
 ID3D11Device* D3D11::GetDevice()
 {
-    return _state.Device;
+    return _d3d11State.Device;
 }
 
 ID3D11DeviceContext* D3D11::GetImmediateContext()
 {
-    return _state.DeviceContext;
+    return _d3d11State.DeviceContext;
 }
 
 ID3D11Resource* D3D11::GetResource(ID3D11View* view)
@@ -72,7 +72,7 @@ static HRESULT WINAPI Hook_D3D11CreateDevice(
         ppImmediateContext
     );
     
-    if (_state.Device != nullptr)
+    if (_d3d11State.Device != nullptr)
     {
         return result;
     }
@@ -80,12 +80,12 @@ static HRESULT WINAPI Hook_D3D11CreateDevice(
     if (SUCCEEDED(result) && !IsD3D11On12(*ppDevice)) {
         if (ppDevice) {
             *ppDevice = D3D11::Internal::Wrap(*ppDevice);
-            _state.Device = _state.Device ? _state.Device : *ppDevice;
+            _d3d11State.Device = _d3d11State.Device ? _d3d11State.Device : *ppDevice;
         }
 
         if (ppImmediateContext) {
             *ppImmediateContext = D3D11::Internal::Wrap(*ppImmediateContext);
-            _state.DeviceContext = _state.DeviceContext ? _state.DeviceContext : *ppImmediateContext;
+            _d3d11State.DeviceContext = _d3d11State.DeviceContext ? _d3d11State.DeviceContext : *ppImmediateContext;
         }
     }
 
@@ -121,7 +121,7 @@ HRESULT WINAPI Hook_D3D11CreateDeviceAndSwapChain(
         ppImmediateContext
     );
     
-    if (_state.Device != nullptr)
+    if (_d3d11State.Device != nullptr)
     {
         return result;
     }
@@ -129,12 +129,12 @@ HRESULT WINAPI Hook_D3D11CreateDeviceAndSwapChain(
     if (SUCCEEDED(result) && !IsD3D11On12(*ppDevice)) {
         if (ppDevice) {
             *ppDevice = D3D11::Internal::Wrap(*ppDevice);
-            _state.Device = _state.Device ? _state.Device : *ppDevice;
+            _d3d11State.Device = _d3d11State.Device ? _d3d11State.Device : *ppDevice;
         }
 
         if (ppImmediateContext) {
             *ppImmediateContext = D3D11::Internal::Wrap(*ppImmediateContext);
-            _state.DeviceContext = _state.DeviceContext ? _state.DeviceContext : *ppImmediateContext;
+            _d3d11State.DeviceContext = _d3d11State.DeviceContext ? _d3d11State.DeviceContext : *ppImmediateContext;
         }
     }
 

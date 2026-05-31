@@ -20,5 +20,6 @@ using FnPresent = void (*)(IDXGISwapChain* swapChain);
 void On_CreateSwapChain(FnCreateSwapChain&& fn);
 void On_Present_Before(FnPresent&& fn);
 void On_Present_After(FnPresent&& fn);
+bool RegisterHooks();
 
 }
