@@ -6,6 +6,7 @@ FnGetProcAddress _GetProcAddress;
 FARPROC WINAPI Hook_GetProcAddress(_In_ HMODULE hModule, _In_ LPCSTR lpProcName);
 
 static void SetupConsole();
+void RegisterDirectHooks();
 
 BOOL APIENTRY DllMain(HMODULE module, DWORD reason, LPVOID _)
 {
@@ -13,7 +14,7 @@ BOOL APIENTRY DllMain(HMODULE module, DWORD reason, LPVOID _)
         SetupConsole();
 
         InitializeServices();
-
+    
         if (FAIL(MH_Initialize())) {
             return false;
         }
@@ -21,6 +22,8 @@ BOOL APIENTRY DllMain(HMODULE module, DWORD reason, LPVOID _)
         if (FAIL(MH_CreateHookApi(L"kernel32.dll", "GetProcAddress", &Hook_GetProcAddress, (LPVOID*)&_GetProcAddress))) {
             return false;
         }
+        
+        RegisterDirectHooks();
 
         if (FAIL(MH_EnableHook(MH_ALL_HOOKS))) {
             return false;
@@ -52,7 +55,7 @@ FARPROC WINAPI Hook_GetProcAddress(
                 service.FnSetHookOriginal(lpProcName, _GetProcAddress(hModule, lpProcName));
             }
 
-            LOG_DEBUGV("API redirected from {} to service {}\n", lpProcName, service.Name);
+            // LOG_DEBUGV("API redirected from {} to service {}\n", lpProcName, service.Name);
             return proc;
         }
     }
@@ -83,5 +86,25 @@ static void SetupConsole()
 
     if (FAIL(SetConsoleMode(handle, orig | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN))) {
         DISCARD(SetConsoleMode(handle, orig | ENABLE_VIRTUAL_TERMINAL_PROCESSING));
+    }
+}
+
+void RegisterDirectHooks()
+{
+    for (const ServiceInfo& service : GetServices())
+    {
+        for (const DirectHook& hook : service.DirectHooks) {
+            LPVOID trampoline = nullptr;
+            if (FAIL(MH_CreateHookApi(hook.Module, hook.FunctionName, hook.HookFunction, &trampoline))) {
+                LOG_ERROR("Failed to create hook for {}!\n", hook.FunctionName);
+                continue;
+            }
+            
+            if (service.FnSetHookOriginal) {
+                service.FnSetHookOriginal(hook.FunctionName, reinterpret_cast<FARPROC>(trampoline));
+            }
+            
+            LOG_DEBUGV("Direct hook registered for {}\n", hook.FunctionName);
+        }
     }
 }
