@@ -2,7 +2,7 @@
 
 Adds DLSS support to Warhammer 40k: Rogue Trader. Non-Nvidia users gain OptiScaler support.
 
-Tested as of 
+Tested as of Rogue Trader 1.5.0.320
 
 ## Why use?
 
