@@ -12,7 +12,7 @@ extern struct Callbacks {
 
 extern struct State {
     IDXGIAdapter4* BestAdapter;
-} _state;
+} _dxgiState;
 
 IDXGIFactory* Wrap(IDXGIFactory* factory);
 IDXGISwapChain* Wrap(IDXGISwapChain* swapChain);
