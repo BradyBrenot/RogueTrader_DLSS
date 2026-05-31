@@ -218,6 +218,8 @@ static void Evaluate_Impl(RenderResource colorIn, RenderResource colorOut, float
 
 static void Initialize_RunTests();
 
+thread_local int inUpscale = 0;
+
 static void Initialize(ID3D11Device* device, ID3D11DeviceContext* immediateContext)
 {
     if (_dlssState.Initialized) {
@@ -300,6 +302,12 @@ static void Initialize(ID3D11Device* device, ID3D11DeviceContext* immediateConte
     });
 
     D3D11::On_SetRenderTargets([](const std::vector<ID3D11RenderTargetView*>& rtvs, ID3D11DepthStencilView* dsv) {
+        if (inUpscale)
+        {
+            // Maybe intercepting optiscaler, let's let it go
+            return;
+        }
+        
         std::lock_guard _(_dlssState.Lock);
 
         ID3D11RenderTargetView* match = nullptr;
@@ -346,7 +354,9 @@ static void Initialize(ID3D11Device* device, ID3D11DeviceContext* immediateConte
             }
 
             if (!validationFailure) {
+                ++inUpscale;
                 DISCARD(NGX_D3D11_EVALUATE_DLSS_EXT(D3D11::GetImmediateContext(), _dlssState.Handle, _dlssState.Params, params));
+                --inUpscale;
             } else {
                 const float rgba[] = { 1.0f, 0.0f, 0.0f, 1.0f };
                 D3D11::GetImmediateContext()->ClearRenderTargetView(match, rgba);
