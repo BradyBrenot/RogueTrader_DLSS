@@ -1,0 +1,3 @@
+[submodule "Native/ext/dlss"]
+	path = Native/ext/dlss
+	url = https://github.com/NVIDIA/DLSS.git
