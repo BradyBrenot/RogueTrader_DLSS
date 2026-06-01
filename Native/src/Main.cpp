@@ -13,7 +13,7 @@ void RegisterDirectHooks();
 BOOL APIENTRY DllMain(HMODULE module, DWORD reason, LPVOID _)
 {
     if (reason == DLL_PROCESS_ATTACH) {
-#ifdef DEBUG
+#ifdef _DEBUG
         SetupConsole();
 #endif
 
