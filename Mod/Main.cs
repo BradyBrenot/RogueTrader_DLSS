@@ -26,6 +26,8 @@ public class EGSettings : UnityModManager.ModSettings {
 
     public bool DebugSkipPostProcessing = false;
     
+    public bool FixParticleScale = true;
+    
     public bool DebugOptions = false;
 
     public override void Save(UnityModManager.ModEntry modEntry) {
@@ -63,6 +65,8 @@ public static class EnhancedGraphics {
     public static Vector2 JitterScaleToUpscale => _settings.JitterScaleToUpscale;
 
     public static bool DebugSkipPostProcessing => _settings.DebugSkipPostProcessing;
+    
+    public static bool FixParticleScale => _settings.FixParticleScale;
 
     public static bool Load(UnityModManager.ModEntry modEntry) {
         NativeInterop.Initialize(modEntry.Path);
@@ -176,6 +180,10 @@ public static class EnhancedGraphics {
                 _settings.CustomPreset[_settings.SelectedUpscaler] = preset;
                 _settings.SelectedPreset[_settings.SelectedUpscaler] = preset.Name;
             }
+            
+            GUILayout.BeginHorizontal();
+            _settings.FixParticleScale = GUILayout.Toggle(_settings.FixParticleScale, "Fix particle scale (experimental)");
+            GUILayout.EndHorizontal();
             
             GUILayout.BeginHorizontal();
             _settings.DebugOptions = GUILayout.Toggle(_settings.DebugOptions, "Enable Debug Options");

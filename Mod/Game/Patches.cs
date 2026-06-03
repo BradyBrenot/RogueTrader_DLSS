@@ -24,7 +24,8 @@ public static class PatchCustomUpscalePass {
     [HarmonyPatch(typeof(WaaaghRenderer), nameof(WaaaghRenderer.Setup))]
     private static void WaaaghRenderer_Setup(WaaaghRenderer __instance, ScriptableRenderContext context, ref RenderingData renderingData) {
         _upscalePass ??= new(RenderPassEvent.BeforeRenderingPostProcessing - 20, __instance.Settings.Shaders.FinalBlitShader);
-
+        _screenParamsPass ??= new(RenderPassEvent.BeforeRenderingTransparents - 1);
+        
         if (Util.CanApplyPipelineChanges(renderingData.CameraData)) {
             __instance.EnqueuePass(_upscalePass);
 
@@ -48,6 +49,10 @@ public static class PatchCustomUpscalePass {
 
             if (EnhancedGraphics.DebugSkipPostProcessing) {
                 __instance.m_ActiveRenderPassQueue.RemoveAll(x => x is PostProcessPass);
+            }
+            
+            if (EnhancedGraphics.FixParticleScale) {
+                __instance.EnqueuePass(_screenParamsPass);
             }
         }
     }
@@ -76,6 +81,7 @@ public static class PatchCustomUpscalePass {
     }
 
     private static UpscalePass _upscalePass;
+    private static TransparentScreenParamsPass _screenParamsPass;
 }
 
 [HarmonyPatch]

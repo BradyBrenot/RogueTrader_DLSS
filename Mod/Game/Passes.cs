@@ -111,3 +111,22 @@ public class UpscalePass(RenderPassEvent evt, Shader backupBlitShader) : Scripta
 
     private readonly Material _backupBlitMaterial = CoreUtils.CreateEngineMaterial(backupBlitShader);
 }
+
+public class TransparentScreenParamsPass(RenderPassEvent evt) : ScriptableRenderPass<TransparentScreenParamsPass.PassData>(evt) {
+    public override string Name => nameof(TransparentScreenParamsPass);
+    public class PassData : PassDataBase { public Vector4 ScreenParams; }
+
+    public override void Setup(RenderGraphBuilder builder, PassData data, ref RenderingData renderingData) {
+        builder.AllowPassCulling(false);
+        Vector2Int vs = renderingData.CameraData.NonScaledCameraTargetViewportSize;
+        data.ScreenParams = new Vector4(vs.x, vs.y, 1f + 1f / vs.x, 1f + 1f / vs.y);
+    }
+    public override void Render(PassData data, RenderGraphContext context) {
+        // This overwrites the global shader variable _ScreenParams, which is horrendous
+        // but it seems like particles (and maybe other billboards) and HBAO are the only
+        // things using it; this pass happens after HBAO
+        context.cmd.SetGlobalVector(_screenParamsId, data.ScreenParams);
+    }
+
+    private static readonly int _screenParamsId = Shader.PropertyToID("_ScreenParams");
+}
