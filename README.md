@@ -20,7 +20,7 @@ Tested as of Rogue Trader 1.5.0.320
 5. Non-Nvidia users: follow the **OptiScaler** instructions below
 6. Start the game, and load a save file. In the mod menu (ctrl+f10 by default), open Enhanced Graphics, and set the Upscaler Type to `DlssUpscaler`. Select a preset or drag the slider to make a custom preset.
 
-### Note for pre-v2.0.0 users:
+### Note for pre-v2 users:
 Delete any files from this mod in the game directory (the one where WH40KRT.exe is). That includes winhttp.dll, version.dll, EnhancedGraphics_Native.asi
 
 ## OptiScaler (non-Nvidia users)
