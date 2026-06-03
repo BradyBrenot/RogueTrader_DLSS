@@ -19,7 +19,7 @@ public class EGSettings : UnityModManager.ModSettings {
     public SerializableDictionary<string, UpscalePreset> CustomPreset = [];
 
     public Vector2 MvecScaleToUpscale = -Vector2.one;
-    public Vector2 JitterScale = Vector2.one * 2;
+    public Vector2 JitterScale = Vector2.one;
     public Vector2 JitterScaleToUpscale = Vector2.one;
     public UpscaleFlags Flags = UpscaleFlags.HDR | UpscaleFlags.MVRenderRes | UpscaleFlags.DepthInverted;
     public float GlobalMipBiasOffset = 0.0f;
@@ -59,12 +59,15 @@ public static class EnhancedGraphics {
         .Append(_settings.CustomPreset.TryGetValue(_settings.SelectedUpscaler, out UpscalePreset customPreset) ? customPreset : GetCustomPreset(1));
 
     public static Vector2 MvecScaleToUpscale => _settings.MvecScaleToUpscale;
-    public static Vector2 JitterScale => _settings.JitterScale;
+    public static Vector2 JitterScale => Vector2.one;
     public static Vector2 JitterScaleToUpscale => _settings.JitterScaleToUpscale;
 
     public static bool DebugSkipPostProcessing => _settings.DebugSkipPostProcessing;
 
     public static bool Load(UnityModManager.ModEntry modEntry) {
+        NativeInterop.Initialize(modEntry.Path);
+        Application.onBeforeRender += OnFrame;
+        
         _settings = EGSettings.Load<EGSettings>(modEntry);
 
 #if DEBUG
@@ -190,6 +193,7 @@ public static class EnhancedGraphics {
                 }
                 GUILayout.EndHorizontal();
 
+                /*
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Jitter Scale");
                 GUILayout.Label($"X: {_settings.JitterScale.x:F2}");
@@ -200,6 +204,7 @@ public static class EnhancedGraphics {
                     _settings.JitterScale = Vector2.one * 2;
                 }
                 GUILayout.EndHorizontal();
+                */
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Jitter Scale To Upscale");
@@ -303,7 +308,7 @@ public static class EnhancedGraphics {
         return GetVanillaPreset();
     }
 
-    private static UpscalePreset GetVanillaPreset() => new("Vanilla", new(Screen.width, Screen.height), new(Screen.width, Screen.height));
+    private static UpscalePreset GetVanillaPreset() => new("Vanilla", 0, new(Screen.width, Screen.height), new(Screen.width, Screen.height));
 
     private static UpscalePreset GetCustomPreset(float ratio) {
         Vector2 exactMatch = new(Screen.width * ratio, Screen.height * ratio);
@@ -314,13 +319,17 @@ public static class EnhancedGraphics {
         Vector2 displayResolution = new(Screen.width, Screen.height);
         Vector2 renderResolution = resolutions.OrderBy(r => Mathf.Abs(r.x / r.y - Screen.width / (float)Screen.height)).First();
 
-        return new("Custom", renderResolution, displayResolution);
+        return new("Custom", 0, renderResolution, displayResolution);
     }
 
     private static UpscalePreset GetCustomPreset(float width, float height) {
         Vector2 displayResolution = new(Screen.width, Screen.height);
         Vector2 renderResolution = new(width, height);
 
-        return new("Custom", renderResolution, displayResolution);
+        return new("Custom", 0, renderResolution, displayResolution);
+    }
+    
+    private static void OnFrame() {
+        NativeInterop.NotifyRenderEvent(NativeInterop.Events.FRAME_START);
     }
 }

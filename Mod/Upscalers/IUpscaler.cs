@@ -21,7 +21,7 @@ public enum UpscaleFlags {
     AlphaUpscaling = 1 << 5,
 };
 
-public record struct UpscalePreset(string Name, Vector2 RenderResolution, Vector2 DisplayResolution) {
+public record struct UpscalePreset(string Name, int Preset, Vector2 RenderResolution, Vector2 DisplayResolution) {
     public readonly float Ratio => Mathf.Max(RenderResolution.x / DisplayResolution.x, RenderResolution.y / DisplayResolution.y);
 }
 

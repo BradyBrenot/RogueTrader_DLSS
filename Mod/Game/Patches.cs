@@ -8,6 +8,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
+using Kingmaker.EntitySystem.Entities;
+using Kingmaker.Visual.CharacterSystem;
+using Owlcat.Runtime.Core.Physics.PositionBasedDynamics.Scene;
 using UnityEngine;
 using UnityEngine.Rendering.RenderGraphModule;
 using UnityEngine.Rendering;
@@ -18,7 +22,7 @@ namespace EnhancedGraphics.Game;
 public static class PatchCustomUpscalePass {
     [HarmonyPostfix]
     [HarmonyPatch(typeof(WaaaghRenderer), nameof(WaaaghRenderer.Setup))]
-    private static void WaaaghRenderer_Setup(WaaaghRenderer __instance, in RenderingData renderingData) {
+    private static void WaaaghRenderer_Setup(WaaaghRenderer __instance, ScriptableRenderContext context, ref RenderingData renderingData) {
         _upscalePass ??= new(RenderPassEvent.BeforeRenderingPostProcessing - 20, __instance.Settings.Shaders.FinalBlitShader);
 
         if (Util.CanApplyPipelineChanges(renderingData.CameraData)) {
@@ -357,5 +361,80 @@ public static class PatchDebuggingTools {
             EnhancedGraphics.DebugPrint($"Exception while submitting camera draws: {ex}");
             throw;
         }
+    }
+}
+
+[HarmonyPatch]
+public static class PatchEntityCloth {
+    private static void LogCharacterInfo(Character __instance) {
+        foreach (Cloth cloth in __instance.GetComponentsInChildren<Cloth>()) {
+            SkinnedMeshRenderer smr = cloth.GetComponent<SkinnedMeshRenderer>();
+            if (smr) {
+                EnhancedGraphics.DebugPrint($"Motion vectors for cloth {cloth.name} are {smr.motionVectorGenerationMode}");
+            }
+        }
+        
+        foreach (PBDMeshBody cloth in __instance.GetComponentsInChildren<PBDMeshBody>()) {
+            EnhancedGraphics.DebugPrint($"Looking at PBDMeshBody {cloth.name}");
+            SkinnedMeshRenderer smr = cloth.GetComponent<SkinnedMeshRenderer>();
+            if (smr) {
+                EnhancedGraphics.DebugPrint($"Motion vectors for cloth {cloth.name} are {smr.motionVectorGenerationMode}");
+            }
+        }
+    
+        foreach (SkinnedMeshRenderer smr in __instance.Renderers) {
+            EnhancedGraphics.DebugPrint($"Motion vectors for SMR {smr.name} are {smr.motionVectorGenerationMode}");
+        }
+    
+        foreach (Character.OutfitPartInfo outfitPartInfo in __instance.OutfitObjectsSpawned) {
+            EnhancedGraphics.DebugPrint($"Looking at OutfitPartInfo {outfitPartInfo.GameObject.name}");
+            foreach (Cloth cloth in outfitPartInfo.GameObject.GetComponentsInChildren<Cloth>()) {
+                EnhancedGraphics.DebugPrint($"Looking at Cloth {cloth.name}");
+                SkinnedMeshRenderer smr = cloth.GetComponent<SkinnedMeshRenderer>();
+                if (smr) {
+                    EnhancedGraphics.DebugPrint($"Motion vectors for cloth {cloth.name} are {smr.motionVectorGenerationMode}");
+                }
+            }
+        
+            foreach (PBDMeshBody cloth in outfitPartInfo.GameObject.GetComponentsInChildren<PBDMeshBody>()) {
+                EnhancedGraphics.DebugPrint($"Looking at PBDMeshBody {cloth.name}");
+                MeshRenderer mr = cloth.GetComponent<MeshRenderer>();
+                
+                if (mr) {
+                    foreach(Material mat in mr.sharedMaterials)
+                    {
+                        EnhancedGraphics.DebugPrint($"Cloak {outfitPartInfo.GameObject.name}: material={mat.name} shader={mat.shader.name}");
+                    }
+                }
+            }
+        }
+    }
+    
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(Character), nameof(Character.UpdateCharacter))]
+    private static void On_UpdateCharacter(Character __instance) {
+        EnhancedGraphics.DebugPrint($"We hooked a Character UpdateCharacter {__instance.name}");
+        LogCharacterInfo(__instance);
+    }
+    
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(Character), nameof(Character.OnStart))]
+    private static void On_OnStart(Character __instance) {
+        EnhancedGraphics.DebugPrint($"We hooked a Character OnStart {__instance.name}");
+        LogCharacterInfo(__instance);
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(Character), nameof(Character.BuildMesh))]
+    private static void On_BuildMesh(Character __instance, Dictionary<BodyPart, EquipmentEntity> geometryBodyParts) {
+        EnhancedGraphics.DebugPrint($"We hooked a Character BuildMesh {__instance.name}");
+        LogCharacterInfo(__instance);
+    }
+    
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(Character), nameof(Character.RebuildOutfit))]
+    private static void On_BuildMesh(Character __instance) {
+        EnhancedGraphics.DebugPrint($"We hooked a Character RebuildOutfit {__instance.name}");
+        LogCharacterInfo(__instance);
     }
 }

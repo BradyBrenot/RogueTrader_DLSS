@@ -1,30 +1,42 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace EnhancedGraphics;
-public class NativeInterop {
-    public static IntPtr GetFunction(string functionName) => GetProcAddress(IntPtr.Zero, functionName);
-
+public static class NativeInterop {
+    public static void Initialize(string modPath) {
+        string dllPath = Path.Combine(modPath, "EnhancedGraphics_Native.dll");
+        LoadLibrary(dllPath);
+    }
+    
     public static void DebugPrint(string str) {
-        if (_debugPrintFromManaged != null) {
-            IntPtr ptr = Marshal.StringToHGlobalAnsi(str);
-            _debugPrintFromManaged(ptr);
-            Marshal.FreeHGlobal(ptr);
-        }
+        DebugPrintFromManaged(str);
+    }
+    
+    public enum Events {
+        FRAME_START = 0,
+        RENDER = 1,
     }
 
-    static unsafe NativeInterop() {
-        try {
-            _debugPrintFromManaged = Marshal.GetDelegateForFunctionPointer<FnDebugPrintFromManaged>(GetFunction("DebugPrintFromManaged"));
-        } catch {
-            Debug.LogWarning($"Failed to load native function DebugPrintFromManaged. This won't break anything, just no debug log output.");
-        }
+    public static void NotifyRenderEvent(Events eventId, IntPtr data) {
+        OnRenderEvent((int)eventId, data);
     }
-
-    private unsafe delegate void FnDebugPrintFromManaged(IntPtr str);
-    private static readonly FnDebugPrintFromManaged _debugPrintFromManaged;
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Ansi, SetLastError = true)]
-    private static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+    
+    public static void NotifyRenderEvent(Events eventId) {
+        IntPtr data = IntPtr.Zero;
+        OnRenderEvent((int)eventId, data);
+    }
+    
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern IntPtr LoadLibrary(string lpLibFileName);
+    
+    [DllImport("EnhancedGraphics_Native.dll", CharSet = CharSet.Ansi)]
+    private static extern void DebugPrintFromManaged(string str);
+    
+    [DllImport("EnhancedGraphics_Native.dll")]
+    public static extern IntPtr GetUnityEventFunc();
+    
+    [DllImport("EnhancedGraphics_Native.dll")]
+    private static extern IntPtr OnRenderEvent(int eventId, IntPtr data);
 }

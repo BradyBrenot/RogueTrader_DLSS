@@ -1,22 +1,11 @@
 #include <Services.hpp>
 #include <Util.hpp>
 
-static void DebugPrintFromManaged(const char* str)
+#include "Interop.h"
+
+DLL_EXPORT void DebugPrintFromManaged(const char* str)
 {
+#ifdef _DEBUG
     LOG_DEBUG("{}", str);
+#endif
 }
-
-static FARPROC GetHook(const char* fn)
-{
-    if (strcmp(fn, "DebugPrintFromManaged") == 0) {
-        return (FARPROC)DebugPrintFromManaged;
-    }
-
-    return nullptr;
-}
-
-REGISTER_SERVICE(
-    .Name = "DebugPrintFromManaged",
-    .Flags = ServiceFlags::DebugOnly,
-    .FnGetHook = GetHook
-);

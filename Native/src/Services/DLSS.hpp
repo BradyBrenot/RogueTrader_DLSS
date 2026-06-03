@@ -25,11 +25,10 @@ struct EvaluationParams {
     float JitterY;
     float MVecScaleX;
     float MVecScaleY;
-    bool Reset;
 };
 
 struct QualityMode {
-    const char* Name;
+    NVSDK_NGX_PerfQuality_Value Preset;
     uint32_t InputWidth;
     uint32_t InputHeight;
     uint32_t FinalWidth;

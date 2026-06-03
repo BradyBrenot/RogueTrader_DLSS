@@ -75,16 +75,16 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(ProjectDir)src;$(ProjectDir)ext\imgui;$(ProjectDir)ext\dlss\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)ext\dlss\lib\Windows_x86_64\x64;$(LibraryPath)</LibraryPath>
-    <OutDir>$(RogueTraderInstallDir)\</OutDir>
+    <OutDir>$(ModDir)\</OutDir>
     <TargetName>EnhancedGraphics_Native</TargetName>
-    <TargetExt>.asi</TargetExt>
+    <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(ProjectDir)src;$(ProjectDir)ext\imgui;$(ProjectDir)ext\dlss\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)ext\dlss\lib\Windows_x86_64\x64;$(LibraryPath)</LibraryPath>
-    <OutDir>$(RogueTraderInstallDir)\</OutDir>
+    <OutDir>$(ModDir)\</OutDir>
     <TargetName>EnhancedGraphics_Native</TargetName>
-    <TargetExt>.asi</TargetExt>
+    <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <VcpkgUseStatic>true</VcpkgUseStatic>
@@ -191,62 +191,106 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ext/imgui/imgui.cpp" />
-    <ClCompile Include="ext/imgui/imgui_demo.cpp" />
-    <ClCompile Include="ext/imgui/imgui_draw.cpp" />
-    <ClCompile Include="ext/imgui/imgui_impl_dx11.cpp" />
-    <ClCompile Include="ext/imgui/imgui_impl_win32.cpp" />
-    <ClCompile Include="ext/imgui/imgui_stdlib.cpp" />
-    <ClCompile Include="ext/imgui/imgui_tables.cpp" />
-    <ClCompile Include="ext/imgui/imgui_widgets.cpp" />
     <ClCompile Include="src/Main.cpp" />
     <ClCompile Include="src/Services.cpp" />
     <ClCompile Include="src/Util.cpp" />
     <ClCompile Include="src/Services/DLSS.cpp" />
     <ClCompile Include="src/Services/Debug/DebugPrintFromManaged.cpp" />
-    <ClCompile Include="src/Services/ImGUIService.cpp" />
     <ClCompile Include="src/Services/Platform/D3D11/D3D11.cpp" />
-    <ClCompile Include="src/Services/Platform/DXGI/DXGI.cpp" />
-    <ClCompile Include="src/Services/Debug/Inspector.cpp" />
     <ClCompile Include="src/Services/Debug/DisableSteamAppRestart.cpp" />
-    <ClCompile Include="src/Services/Platform/D3D11/D3D11_Device.cpp" />
-    <ClCompile Include="src/Services/Platform/D3D11/D3D11_DeviceContext.cpp" />
     <ClCompile Include="src/Services/Platform/D3D11/D3D11_Util.cpp" />
     <ClCompile Include="src/Services/Platform/D3D11/_D3D11.hpp" />
-    <ClCompile Include="src/Services/Platform/DXGI/DXGI_Factory.cpp" />
-    <ClCompile Include="src/Services/Platform/DXGI/DXGI_SwapChain.cpp" />
-    <ClCompile Include="src/Services/Platform/DXGI/DXGI_Util.cpp" />
+    <ClCompile Include="src\Interop.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ext/imgui/imgui.natstepfilter" />
     <None Include="vcpkg.json" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ext/imgui/imconfig.h" />
-    <ClInclude Include="ext/imgui/imgui.h" />
-    <ClInclude Include="ext/imgui/imgui_impl_dx11.h" />
-    <ClInclude Include="ext/imgui/imgui_impl_win32.h" />
-    <ClInclude Include="ext/imgui/imgui_internal.h" />
-    <ClInclude Include="ext/imgui/imgui_stdlib.h" />
-    <ClInclude Include="ext/imgui/imstb_rectpack.h" />
-    <ClInclude Include="ext/imgui/imstb_textedit.h" />
-    <ClInclude Include="ext/imgui/imstb_truetype.h" />
-    <ClInclude Include="ext/nvsdk/nvsdk_ngx.h" />
-    <ClInclude Include="ext/nvsdk/nvsdk_ngx_defs.h" />
-    <ClInclude Include="ext/nvsdk/nvsdk_ngx_helpers.h" />
-    <ClInclude Include="ext/nvsdk/nvsdk_ngx_helpers_vk.h" />
-    <ClInclude Include="ext/nvsdk/nvsdk_ngx_params.h" />
-    <ClInclude Include="ext/nvsdk/nvsdk_ngx_vk.h" />
+    <ClInclude Include="ext\dlss\include\nvsdk_ngx.h" />
+    <ClInclude Include="ext\dlss\include\nvsdk_ngx_defs.h" />
+    <ClInclude Include="ext\dlss\include\nvsdk_ngx_defs_dlssd.h" />
+    <ClInclude Include="ext\dlss\include\nvsdk_ngx_defs_dlssg.h" />
+    <ClInclude Include="ext\dlss\include\nvsdk_ngx_helpers.h" />
+    <ClInclude Include="ext\dlss\include\nvsdk_ngx_helpers_dlssd.h" />
+    <ClInclude Include="ext\dlss\include\nvsdk_ngx_helpers_dlssd_cuda.h" />
+    <ClInclude Include="ext\dlss\include\nvsdk_ngx_helpers_dlssd_vk.h" />
+    <ClInclude Include="ext\dlss\include\nvsdk_ngx_helpers_dlssg.h" />
+    <ClInclude Include="ext\dlss\include\nvsdk_ngx_helpers_dlssg_vk.h" />
+    <ClInclude Include="ext\dlss\include\nvsdk_ngx_helpers_vk.h" />
+    <ClInclude Include="ext\dlss\include\nvsdk_ngx_params.h" />
+    <ClInclude Include="ext\dlss\include\nvsdk_ngx_params_dlssd.h" />
+    <ClInclude Include="ext\dlss\include\nvsdk_ngx_params_dlssg.h" />
+    <ClInclude Include="ext\dlss\include\nvsdk_ngx_vk.h" />
     <ClInclude Include="src/Util.hpp" />
     <ClInclude Include="src/Services.hpp" />
     <ClInclude Include="src/Services/DLSS.hpp" />
-    <ClInclude Include="src/Services/Debug/Inspector.hpp" />
     <ClInclude Include="src/Services/Platform/D3D11.hpp" />
-    <ClInclude Include="src/Services/Platform/DXGI.hpp" />
-    <ClInclude Include="src/Services/Platform/DXGI/_DXGI.hpp" />
+    <ClInclude Include="src\Interop.h" />
   </ItemGroup>
   <ItemGroup>
-    <Natvis Include="ext/imgui/imgui.natvis" />
+    <Content Include="ext\dlss\.git" />
+    <Content Include="ext\dlss\.gitmodules" />
+    <Content Include="ext\dlss\DLSS Donut and Sample Source_Pre-Release License (2July2019).pdf" />
+    <Content Include="ext\dlss\doc\DLSS-FG Programming Guide.pdf" />
+    <Content Include="ext\dlss\doc\DLSS-RR Integration Guide.pdf" />
+    <Content Include="ext\dlss\doc\DLSS_Programming_Guide_Release.pdf" />
+    <Content Include="ext\dlss\doc\RTX Developer Localization Strings.zip" />
+    <Content Include="ext\dlss\doc\RTX UI Developer Guidelines Chinese Version.pdf" />
+    <Content Include="ext\dlss\doc\RTX UI Developer Guidelines.pdf" />
+    <Content Include="ext\dlss\lib\Linux_x86_64\dev\libnvidia-ngx-dlss.so.310.6.0" />
+    <Content Include="ext\dlss\lib\Linux_x86_64\dev\libnvidia-ngx-dlssd.so.310.6.0" />
+    <Content Include="ext\dlss\lib\Linux_x86_64\dev\libnvidia-ngx-dlssg.so.310.6.0" />
+    <Content Include="ext\dlss\lib\Linux_x86_64\libnvsdk_ngx.a" />
+    <Content Include="ext\dlss\lib\Linux_x86_64\rel\libnvidia-ngx-dlss.so.310.6.0" />
+    <Content Include="ext\dlss\lib\Linux_x86_64\rel\libnvidia-ngx-dlssd.so.310.6.0" />
+    <Content Include="ext\dlss\lib\Linux_x86_64\rel\libnvidia-ngx-dlssg.so.310.6.0" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\dev\nvngx_dlss.dll" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\dev\nvngx_dlssd.dll" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\dev\nvngx_dlssg.dll" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\khr\x64\nvsdk_ngx_khr_d.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\khr\x64\nvsdk_ngx_khr_d_dbg.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\khr\x64\nvsdk_ngx_khr_s.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\khr\x64\nvsdk_ngx_khr_s_dbg.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\rel\nvngx_dlss.dll" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\rel\nvngx_dlssd.dll" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\rel\nvngx_dlssg.dll" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\uwp\x64\nvsdk_ngx_uwp_d.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\uwp\x64\nvsdk_ngx_uwp_d_dbg.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\vs2010\x64\nvsdk_ngx_d.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\vs2010\x64\nvsdk_ngx_d_dbg.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\vs2010\x64\nvsdk_ngx_s.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\vs2010\x64\nvsdk_ngx_s_dbg.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\vs2012\x64\nvsdk_ngx_d.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\vs2012\x64\nvsdk_ngx_d_dbg.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\vs2012\x64\nvsdk_ngx_s.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\vs2012\x64\nvsdk_ngx_s_dbg.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\vs2013\x64\nvsdk_ngx_d.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\vs2013\x64\nvsdk_ngx_d_dbg.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\vs2013\x64\nvsdk_ngx_s.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\vs2013\x64\nvsdk_ngx_s_dbg.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\x64\nvsdk_ngx_d.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\x64\nvsdk_ngx_d_dbg.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\x64\nvsdk_ngx_d_dbg_iterator0.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\x64\nvsdk_ngx_d_dbg_iterator1.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\x64\nvsdk_ngx_d_iterator1.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\x64\nvsdk_ngx_s.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\x64\nvsdk_ngx_s_dbg.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\x64\nvsdk_ngx_s_dbg_iterator0.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\x64\nvsdk_ngx_s_dbg_iterator1.lib" />
+    <Content Include="ext\dlss\lib\Windows_x86_64\x64\nvsdk_ngx_s_iterator1.lib" />
+    <Content Include="ext\dlss\LICENSE.txt" />
+    <Content Include="ext\dlss\README.md" />
+    <Content Include="ext\dlss\utils\DLSS_Debug_Jitter_Configs.txt" />
+    <Content Include="ext\dlss\utils\ngx_driver_onscreenindicator.reg" />
+    <Content Include="ext\dlss\utils\ngx_driver_onscreenindicator_off.reg" />
+    <Content Include="ext\dlss\utils\ngx_log_off.reg" />
+    <Content Include="ext\dlss\utils\ngx_log_on.reg" />
+    <Content Include="ext\dlss\utils\ngx_log_verbose.reg" />
+    <Content Include="ext\dlss\utils\ngx_log_window_off.reg" />
+    <Content Include="ext\dlss\utils\ngx_log_window_on.reg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ext\dlss\NVIDIAImageScaling\" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
