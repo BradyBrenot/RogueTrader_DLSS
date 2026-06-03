@@ -39,4 +39,3 @@ See [here](https://github.com/BradyBrenot/RogueTrader_DLSS/issues) for a list of
 ## Credits
 
 1. Original mod: [cstamford](https://github.com/cstamford/RogueTrader_DLSS)
-2. `winhttp.dll`: [Ultimate-ASI-Loader](https://github.com/ThirteenAG/Ultimate-ASI-Loader/releases)
