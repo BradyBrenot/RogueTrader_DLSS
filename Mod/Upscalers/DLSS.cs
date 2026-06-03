@@ -111,7 +111,6 @@ public class DlssUpscaler : IUpscaler {
         }
         
         if (_settingsDirty) {
-            Debug.Log($"[DLSS] _settingsDirty");
             SetQualityModeNative(Mode, _evalFlags);
             _settingsDirty = false;
         }

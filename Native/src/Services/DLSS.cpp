@@ -401,9 +401,6 @@ void DLSS::Initialize(ID3D11Device* device, ID3D11DeviceContext* immediateContex
                 }
             }
             
-            auto preset = NVSDK_NGX_DLSS_Hint_Render_Preset_K; 
-            NVSDK_NGX_Parameter_SetUI(_dlssState.Params, NVSDK_NGX_Parameter_DLSS_Hint_Render_Preset_Performance, preset); 
-
             if (!validationFailure) {
                 DISCARD(NGX_D3D11_EVALUATE_DLSS_EXT(D3D11::GetImmediateContext(), _dlssState.Handle, _dlssState.Params, params));
             } else {

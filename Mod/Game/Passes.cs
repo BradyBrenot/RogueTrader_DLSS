@@ -81,12 +81,6 @@ public class UpscalePass(RenderPassEvent evt, Shader backupBlitShader) : Scripta
             Reset = false
         };
 
-        List<Camera> cameras = new List<Camera>();
-        context.renderContext.GetCameras(cameras);
-        foreach (Camera cam in cameras) {
-            Debug.Log($"[DLSS] camera={cam.name}");
-        }
-
         bool evaluated = data.InputUpscaler.Evaluate(
             inputColorRt.GetNativeTexturePtr(),
             inputOutputRt.GetNativeTexturePtr(),
