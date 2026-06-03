@@ -44,6 +44,17 @@
 		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
 		<PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" IncludeAssets="build; contentfiles" Version="0.4.2" PrivateAssets="all" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Content Include="..\.gitignore">
+	    <Link>.gitignore</Link>
+	  </Content>
+	  <Content Include="..\.gitmodules">
+	    <Link>.gitmodules</Link>
+	  </Content>
+	  <Content Include="..\README.md">
+	    <Link>README.md</Link>
+	  </Content>
+	</ItemGroup>
 	<Target Name="GenerateCustomPropsFile" Condition="$(RogueTraderInstallDir) == ''">
 		<Exec Command="findstr /C:&quot;Mono path[0]&quot; &quot;$(RogueTraderData)\Player.log&quot;" IgnoreExitCode="true" ConsoleToMSBuild="true">
 			<Output TaskParameter="ExitCode" PropertyName="ExitCode" />
