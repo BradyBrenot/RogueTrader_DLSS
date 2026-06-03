@@ -2,11 +2,11 @@
   "Id": "EnhancedGraphics",
   "DisplayName": "EnhancedGraphics",
   "Author": "",
-  "Version": "1.0.1",
+  "Version": "2.1.0",
   "ManagerVersion": "0.25.0",
   "Requirements": [],
   "AssemblyName": "EnhancedGraphics.dll",
   "EntryMethod": "EnhancedGraphics.EnhancedGraphics.Load",
-  "HomePage": "https://github.com/cstamford/EnhancedGraphics",
+  "HomePage": "https://github.com/BradyBrenot/RogueTrader_DLSS",
   "Repository": ""
 }
