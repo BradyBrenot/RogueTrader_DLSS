@@ -83,7 +83,7 @@ public class UpscalePass(RenderPassEvent evt, Shader backupBlitShader) : Scripta
 
         bool evaluated = data.InputUpscaler.Evaluate(
             inputColorRt.GetNativeTexturePtr(),
-            inputOutputRt.GetNativeTexturePtr(),
+            data.InputDisplayResolution == data.InputRenderResolution ? inputOutputRt.GetNativeTexturePtr() : outputRt.GetNativeTexturePtr(),
             0.0f,
             param
         );
@@ -103,8 +103,10 @@ public class UpscalePass(RenderPassEvent evt, Shader backupBlitShader) : Scripta
         
         context.cmd.IssuePluginEventAndData(NativeInterop.GetUnityEventFunc(),
             (int)NativeInterop.Events.RENDER, IntPtr.Zero);
-        
-        context.cmd.Blit(inputOutputRt, outputRt);
+
+        if (data.InputDisplayResolution == data.InputRenderResolution) {
+            context.cmd.CopyTexture(inputOutputRt, outputRt);
+        }
     }
 
     private readonly Material _backupBlitMaterial = CoreUtils.CreateEngineMaterial(backupBlitShader);
