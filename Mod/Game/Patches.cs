@@ -8,6 +8,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
+using Kingmaker.EntitySystem.Entities;
+using Kingmaker.Visual.CharacterSystem;
+using Owlcat.Runtime.Core.Physics.PositionBasedDynamics.Scene;
 using UnityEngine;
 using UnityEngine.Rendering.RenderGraphModule;
 using UnityEngine.Rendering;
@@ -18,7 +22,7 @@ namespace EnhancedGraphics.Game;
 public static class PatchCustomUpscalePass {
     [HarmonyPostfix]
     [HarmonyPatch(typeof(WaaaghRenderer), nameof(WaaaghRenderer.Setup))]
-    private static void WaaaghRenderer_Setup(WaaaghRenderer __instance, in RenderingData renderingData) {
+    private static void WaaaghRenderer_Setup(WaaaghRenderer __instance, ScriptableRenderContext context, ref RenderingData renderingData) {
         _upscalePass ??= new(RenderPassEvent.BeforeRenderingPostProcessing - 20, __instance.Settings.Shaders.FinalBlitShader);
 
         if (Util.CanApplyPipelineChanges(renderingData.CameraData)) {

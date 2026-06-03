@@ -6,7 +6,6 @@
 #undef FMT_UNICODE
 #pragma pop_macro("FMT_UNICODE")
 
-#include <MinHook.h>
 #include <Windows.h>
 
 #include <cassert>
@@ -57,7 +56,6 @@ const char* ToString(HRESULT value);
 const char* ToString(NVSDK_NGX_Result value);
 const char* ToString(NVSDK_NGX_Feature_Support_Result value);
 const char* ToString(NVSDK_NGX_PerfQuality_Value value);
-const char* ToString(MH_STATUS value);
 const char* ToString(REFIID riid);
 
 const char* FromWideTemp(const wchar_t* str);
@@ -65,6 +63,7 @@ std::string FromWide(const wchar_t* str);
 IID IIDFromString(const char* str);
 
 const wchar_t* TempPath();
+const char* TempPathShort();
 
 enum class LogLevel {
     Error,
@@ -159,8 +158,6 @@ constexpr bool ResultTraits<T>::IsSuccess(T result)
     } else if constexpr (std::is_same_v<T, NVSDK_NGX_Result>) {
         return NVSDK_NGX_SUCCEED(result);
     } else if constexpr (std::is_same_v<T, NVSDK_NGX_Feature_Support_Result>) {
-        return result == 0;
-    } else if constexpr (std::is_same_v<T, MH_STATUS>) {
         return result == 0;
     } else if constexpr (std::is_same_v<T, BOOL>) {
         return result != FALSE;

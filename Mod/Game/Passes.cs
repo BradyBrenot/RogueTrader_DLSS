@@ -1,4 +1,6 @@
-﻿using EnhancedGraphics.Upscalers;
+﻿using System;
+using System.Collections.Generic;
+using EnhancedGraphics.Upscalers;
 using Owlcat.Runtime.Visual.Waaagh;
 using Owlcat.Runtime.Visual.Waaagh.Passes;
 using Owlcat.Runtime.Visual.Waaagh.Passes.PostProcess;
@@ -28,6 +30,8 @@ public class UpscalePass(RenderPassEvent evt, Shader backupBlitShader) : Scripta
     }
 
     public override void Setup(RenderGraphBuilder builder, PassData data, ref RenderingData renderingData) {
+        builder.AllowPassCulling(false);
+        
         data.InputUpscaler = EnhancedGraphics.Upscaler;
         data.InputRenderResolution = renderingData.CameraData.ScaledCameraTargetViewportSize;
         data.InputDisplayResolution = renderingData.CameraData.NonScaledCameraTargetViewportSize;
@@ -84,9 +88,6 @@ public class UpscalePass(RenderPassEvent evt, Shader backupBlitShader) : Scripta
             param
         );
 
-        context.cmd.SetRenderTarget(inputOutputRt);
-        context.cmd.IncrementUpdateCount(inputOutputRt);
-
         if (!evaluated) {
             FinalBlitter.Blit(
                 context.cmd,
@@ -99,7 +100,10 @@ public class UpscalePass(RenderPassEvent evt, Shader backupBlitShader) : Scripta
                 FinalBlitter.SamplerType.Bilinear
             );
         }
-
+        
+        context.cmd.IssuePluginEventAndData(NativeInterop.GetUnityEventFunc(),
+            (int)NativeInterop.Events.RENDER, IntPtr.Zero);
+        
         context.cmd.Blit(inputOutputRt, outputRt);
     }
 

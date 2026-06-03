@@ -97,11 +97,6 @@ const char* ToString(NVSDK_NGX_PerfQuality_Value value)
     }
 }
 
-const char* ToString(MH_STATUS value)
-{
-    return MH_StatusToString(value);
-}
-
 const char* ToString(REFIID riid)
 {
     LPOLESTR str = nullptr;
@@ -135,5 +130,11 @@ IID IIDFromString(const char* str)
 const wchar_t* TempPath()
 {
     static std::wstring _tempPath = std::filesystem::temp_directory_path().wstring();
+    return _tempPath.c_str();
+}
+
+const char* TempPathShort()
+{
+    static std::string _tempPath = std::filesystem::temp_directory_path().string();
     return _tempPath.c_str();
 }

@@ -6,67 +6,78 @@ using UnityEngine;
 namespace EnhancedGraphics.Upscalers;
 
 public class DlssUpscaler : IUpscaler {
+    private bool _settingsDirty = false;
+    private bool _regeneratePresets = false;
+
+    private QualityMode _mode;
+    private EvaluationFlags _evalFlags;
+    
+    private QualityMode Mode {
+        get => _mode;
+        set {
+            if (_mode.InputWidth == value.InputWidth && _mode.InputHeight == value.InputHeight && _mode.Preset == value.Preset) return;
+            
+            _mode = value;
+            _settingsDirty = true;
+        }
+    }
+    private EvaluationFlags EvalFlags {
+        get => _evalFlags;
+        set {
+            _evalFlags = value;
+            _settingsDirty = true;
+        }
+    }
+    
     public UpscalePreset[] AvailablePresets {
         get {
             Vector2 displayResolution = new(Screen.width, Screen.height);
-            if (_availablePresets == null || displayResolution != _availablePresetsResolution) {
+            if (_availablePresets == null || displayResolution != _availablePresetsResolution || _regeneratePresets) {
                 _availablePresets = [.. GetAvailablePresets(displayResolution).OrderByDescending(x => x.Ratio)];
                 _availablePresetsResolution = displayResolution;
+                _regeneratePresets = false;
             }
             return _availablePresets;
         }
     }
 
     public unsafe bool SetPreset(UpscalePreset preset, UpscaleFlags flags) {
-        if (_setQualityMode == null) {
-            return false;
-        }
-
-        QualityMode mode = new() {
-            Name = Marshal.StringToHGlobalAnsi(preset.Name),
+        Mode = new() {
+            Preset = (DlssPreset)preset.Preset,
             InputWidth = (uint)preset.RenderResolution.x,
             InputHeight = (uint)preset.RenderResolution.y,
             FinalWidth = (uint)preset.DisplayResolution.x,
             FinalHeight = (uint)preset.DisplayResolution.y
         };
 
-        EvaluationFlags evalFlags = 0;
-
         if (flags.HasFlag(UpscaleFlags.HDR)) {
-            evalFlags |= EvaluationFlags.IsHDR;
+            _evalFlags |= EvaluationFlags.IsHDR;
         }
 
         if (flags.HasFlag(UpscaleFlags.MVRenderRes)) {
-            evalFlags |= EvaluationFlags.MVRenderRes;
+            _evalFlags |= EvaluationFlags.MVRenderRes;
         }
 
         if (flags.HasFlag(UpscaleFlags.MVJitter)) {
-            evalFlags |= EvaluationFlags.MVJittered;
+            _evalFlags |= EvaluationFlags.MVJittered;
         }
 
         if (flags.HasFlag(UpscaleFlags.DepthInverted)) {
-            evalFlags |= EvaluationFlags.DepthInverted;
+            _evalFlags |= EvaluationFlags.DepthInverted;
         }
 
         if (flags.HasFlag(UpscaleFlags.AutoExposure)) {
-            evalFlags |= EvaluationFlags.AutoExposure;
+            _evalFlags |= EvaluationFlags.AutoExposure;
         }
 
         if (flags.HasFlag(UpscaleFlags.AlphaUpscaling)) {
-            evalFlags |= EvaluationFlags.AlphaUpscaling;
+            _evalFlags |= EvaluationFlags.AlphaUpscaling;
         }
-
-        _setQualityMode(&mode, evalFlags);
-        Marshal.FreeHGlobal(mode.Name);
 
         return true;
     }
 
     public unsafe bool Evaluate(IntPtr colorIn, IntPtr colorOut, float sharpness, UpscaleOptionalParams param) {
-        if (_evaluate == null) {
-            return false;
-        }
-
         EvaluationParams evalParams = new() {
             DepthIn = param.Depth,
             MvecIn = param.Mvec,
@@ -74,10 +85,37 @@ public class DlssUpscaler : IUpscaler {
             JitterY = param.Jitter.y,
             MVecScaleX = param.MvecScale.x,
             MVecScaleY = param.MvecScale.y,
-            Reset = param.Reset
         };
 
-        _evaluate(colorIn, colorOut, sharpness, &evalParams);
+        bool firstInit = DLSS_Initialize(param.Mvec, Mode, _evalFlags);
+        if (firstInit) {
+            Vector2 displayResolution = new(Screen.width, Screen.height);
+            
+            _regeneratePresets = true;
+            UpscalePreset[] presets = GetAvailablePresets(displayResolution);
+            
+            foreach(UpscalePreset preset in presets)
+            {
+                if (preset.Preset == (int)Mode.Preset) {
+                    Mode = new() {
+                        Preset = (DlssPreset)preset.Preset,
+                        InputWidth = (uint)preset.RenderResolution.x,
+                        InputHeight = (uint)preset.RenderResolution.y,
+                        FinalWidth = (uint)preset.DisplayResolution.x,
+                        FinalHeight = (uint)preset.DisplayResolution.y
+                    };
+                }
+            }
+            
+            _settingsDirty = false;
+        }
+        
+        if (_settingsDirty) {
+            SetQualityModeNative(Mode, _evalFlags);
+            _settingsDirty = false;
+        }
+        
+        EvaluateNative(colorIn, colorOut, sharpness, in evalParams);
 
         return true;
     }
@@ -86,38 +124,24 @@ public class DlssUpscaler : IUpscaler {
     private Vector2 _availablePresetsResolution;
 
     private unsafe UpscalePreset[] GetAvailablePresets(Vector2 displayResolution) {
-        if (_getQualityModes == null) {
-            return [];
-        }
-
-        int numQualityModes = _getQualityModes((uint)displayResolution.x, (uint)displayResolution.y, null);
+        const int MAX_QUALITY_MODES = 15;
+        QualityMode* qualityModes = stackalloc QualityMode[MAX_QUALITY_MODES];
+        int numQualityModes = GetQualityModesNative((uint)displayResolution.x, (uint)displayResolution.y, qualityModes);
+        Debug.Assert(numQualityModes <= MAX_QUALITY_MODES);
         UpscalePreset[] ret = new UpscalePreset[numQualityModes];
 
-        if (numQualityModes > 0) {
-            QualityMode* qualityModes = stackalloc QualityMode[numQualityModes];
-            int numQualityModesWithDetails = _getQualityModes((uint)displayResolution.x, (uint)displayResolution.y, qualityModes);
-            Debug.Assert(numQualityModes == numQualityModesWithDetails);
-
-            for (int i = 0; i < numQualityModes; i++) {
-                ret[i] = new(
-                    Name: Marshal.PtrToStringAnsi(qualityModes[i].Name),
-                    RenderResolution: new(qualityModes[i].InputWidth, qualityModes[i].InputHeight),
-                    DisplayResolution: new(qualityModes[i].FinalWidth, qualityModes[i].FinalHeight)
-                );
-            }
+        if (numQualityModes <= 0) return ret;
+        
+        for (int i = 0; i < numQualityModes; i++) {
+            ret[i] = new(
+                Preset: (int)qualityModes[i].Preset,
+                Name: PresetName(qualityModes[i].Preset),
+                RenderResolution: new(qualityModes[i].InputWidth, qualityModes[i].InputHeight),
+                DisplayResolution: new(qualityModes[i].FinalWidth, qualityModes[i].FinalHeight)
+            );
         }
 
         return ret;
-    }
-
-    static unsafe DlssUpscaler() {
-        try {
-            _getQualityModes = Marshal.GetDelegateForFunctionPointer<FnGetQualityModes>(GetProcAddress(IntPtr.Zero, "DLSS_GetQualityModes"));
-            _setQualityMode = Marshal.GetDelegateForFunctionPointer<FnSetQualityMode>(GetProcAddress(IntPtr.Zero, "DLSS_SetQualityMode"));
-            _evaluate = Marshal.GetDelegateForFunctionPointer<FnEvaluate>(GetProcAddress(IntPtr.Zero, "DLSS_Evaluate"));
-        } catch (Exception ex) {
-            Debug.LogWarning($"Failed to acquire native addresses for DLSS - activating DLSS won't upscale correctly - {ex}");
-        }
     }
 
     [Flags]
@@ -141,27 +165,46 @@ public class DlssUpscaler : IUpscaler {
         public float JitterY;
         public float MVecScaleX;
         public float MVecScaleY;
-        public bool Reset;
     };
+
+    private enum DlssPreset {
+        MaxPerf,
+        Balanced,
+        MaxQuality,
+        UltraPerformance,
+        UltraQuality,
+        DLAA,
+    }
 
     [StructLayout(LayoutKind.Sequential)]
     private struct QualityMode {
-        public IntPtr Name;
+        public DlssPreset Preset;
         public uint InputWidth;
         public uint InputHeight;
         public uint FinalWidth;
         public uint FinalHeight;
     };
+    
+    static string PresetName(DlssPreset q) => q switch
+    {
+        DlssPreset.MaxPerf          => "Performance",
+        DlssPreset.Balanced         => "Balanced",
+        DlssPreset.MaxQuality       => "Quality",
+        DlssPreset.UltraPerformance => "Ultra Performance",
+        DlssPreset.UltraQuality     => "Ultra Quality",
+        DlssPreset.DLAA             => "DLAA",
+        _ => q.ToString()
+    };
+    
+    [DllImport("EnhancedGraphics_Native.dll", EntryPoint = "DLSS_Initialize")]
+    private static unsafe extern bool DLSS_Initialize(IntPtr texPtr, QualityMode qualityMode, EvaluationFlags flags);
 
-    private unsafe delegate int FnGetQualityModes(uint finalWidth, uint finalHeight, QualityMode* outQualityModes);
-    private static readonly FnGetQualityModes _getQualityModes;
+    [DllImport("EnhancedGraphics_Native.dll", EntryPoint = "DLSS_GetQualityModes")]
+    private static unsafe extern int GetQualityModesNative(uint finalWidth, uint finalHeight, QualityMode* outQualityModes);
 
-    private unsafe delegate void FnSetQualityMode(QualityMode* qualityMode, EvaluationFlags flags);
-    private static readonly FnSetQualityMode _setQualityMode;
-
-    private unsafe delegate void FnEvaluate(IntPtr colorIn, IntPtr colorOut, float sharpness, EvaluationParams* param);
-    private static readonly FnEvaluate _evaluate;
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Ansi, SetLastError = true)]
-    private static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+    [DllImport("EnhancedGraphics_Native.dll", EntryPoint = "DLSS_SetQualityMode")]
+    private static unsafe extern void SetQualityModeNative(QualityMode qualityMode, EvaluationFlags flags);
+    
+    [DllImport("EnhancedGraphics_Native.dll", EntryPoint = "DLSS_Evaluate")]
+    private static unsafe extern void EvaluateNative(IntPtr colorIn, IntPtr colorOut, float sharpness, in EvaluationParams param);
 }

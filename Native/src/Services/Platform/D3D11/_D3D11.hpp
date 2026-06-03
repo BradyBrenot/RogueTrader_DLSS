@@ -3,13 +3,10 @@
 
 namespace D3D11::Internal { 
 
-extern struct Callbacks {
-    std::vector<FnSetRenderTargets> SetRenderTargets;
-} _callbacks;
-
 extern struct State {
     ID3D11Device* Device;
     ID3D11DeviceContext* DeviceContext;
+    IDXGIAdapter* Adapter;
 } _d3d11State;
 
 ID3D11Device* Wrap(ID3D11Device* device);
