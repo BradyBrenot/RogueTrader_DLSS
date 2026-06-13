@@ -252,6 +252,7 @@ void DLSS::SetQualityMode_Impl(const QualityMode* mode, const EvaluationFlags fl
 
 void DLSS::Evaluate_Impl(RenderResource colorIn, RenderResource colorOut, float sharpness, const EvaluationParams* params)
 {
+    std::scoped_lock _(_dlssState.Lock);
     if (_dlssState.PendingEvalParams)
     {
         return;
@@ -370,18 +371,12 @@ void DLSS::Initialize(ID3D11Device* device, ID3D11DeviceContext* immediateContex
         return;
     }
 
-    static bool first = true;
-
-    Interop::On_Frame([]() {
-        first = true;
-    });
-
     Interop::On_Before_Present([]() {
         std::lock_guard _(_dlssState.Lock);
 
         NVSDK_NGX_D3D11_DLSS_Eval_Params* params = _dlssState.PendingEvalParams.get();
 
-        if (first && params) {
+        if (params) {
             // Validate that all the resources still match (this can fail if any resizing is happening).
             std::vector<std::tuple<ID3D11Resource*, uint32_t, uint32_t>> inputs = {
                 { params->Feature.pInColor, _dlssState.Mode.InputWidth, _dlssState.Mode.InputHeight },
@@ -415,7 +410,6 @@ void DLSS::Initialize(ID3D11Device* device, ID3D11DeviceContext* immediateContex
             params->pInMotionVectors->Release();
 
             _dlssState.PendingEvalParams.reset();
-            first = false;
         }
     });
     
@@ -432,7 +426,7 @@ void DLSS::Initialize(ID3D11Device* device, ID3D11DeviceContext* immediateContex
         }
     });
     #endif
-
+    
     _dlssState.Initialized = true;
 
     Initialize_RunTests();
