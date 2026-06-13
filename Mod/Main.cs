@@ -310,10 +310,22 @@ public static class EnhancedGraphics {
             if (_settings.SelectedPreset.TryGetValue(upscaler, out string presetName)) {
                 preset = Presets.FirstOrDefault(p => p.Name == presetName);
             }
-            return preset == default ? Presets.First() : preset;
+
+            if (!IsValidPreset(preset)) {
+                preset = Presets.FirstOrDefault(IsValidPreset);
+            }
+
+            return preset == default ? GetVanillaPreset() : preset;
         }
 
         return GetVanillaPreset();
+    }
+
+    private static bool IsValidPreset(UpscalePreset preset) {
+        return preset != default &&
+            preset.RenderResolution.x >= 1 && preset.RenderResolution.y >= 1 &&
+            preset.DisplayResolution.x >= 1 && preset.DisplayResolution.y >= 1 &&
+            !float.IsNaN(preset.Ratio) && !float.IsInfinity(preset.Ratio);
     }
 
     private static UpscalePreset GetVanillaPreset() => new("Vanilla", 0, new(Screen.width, Screen.height), new(Screen.width, Screen.height));

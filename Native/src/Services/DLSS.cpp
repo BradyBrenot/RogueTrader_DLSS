@@ -99,7 +99,7 @@ int DLSS::GetDefaultQualityModes(uint32_t finalWidth, uint32_t finalHeight, Qual
             switch (v)
             {
             case NVSDK_NGX_PerfQuality_Value_MaxPerf: return 2.0f;
-            case NVSDK_NGX_PerfQuality_Value_Balanced: return 1.72f;
+            case NVSDK_NGX_PerfQuality_Value_Balanced: return 1.0f / 0.58f;
             case NVSDK_NGX_PerfQuality_Value_MaxQuality: return 1.5;
             case NVSDK_NGX_PerfQuality_Value_UltraPerformance: return 3.0f;
             case NVSDK_NGX_PerfQuality_Value_UltraQuality: return 1.33f;
@@ -121,15 +121,20 @@ int DLSS::GetDefaultQualityModes(uint32_t finalWidth, uint32_t finalHeight, Qual
         {
             continue;
         }
-        
-        outQualityModes[i].Preset = static_cast<NVSDK_NGX_PerfQuality_Value>(i);
-        outQualityModes[i].InputWidth = ScaleResolution(outQualityModes[i].Preset, finalWidth);
-        outQualityModes[i].InputHeight = ScaleResolution(outQualityModes[i].Preset, finalHeight);
-        outQualityModes[i].FinalWidth = finalWidth;
-        outQualityModes[i].FinalHeight = finalHeight;
+
+        if (outQualityModes)
+        {
+            QualityMode& mode = outQualityModes[numModes];
+            mode.Preset = static_cast<NVSDK_NGX_PerfQuality_Value>(i);
+            mode.InputWidth = ScaleResolution(mode.Preset, finalWidth);
+            mode.InputHeight = ScaleResolution(mode.Preset, finalHeight);
+            mode.FinalWidth = finalWidth;
+            mode.FinalHeight = finalHeight;
+        }
+
         numModes++;
     }
-    
+
     return numModes;
 }
 
@@ -251,7 +256,7 @@ void DLSS::Evaluate_Impl(RenderResource colorIn, RenderResource colorOut, float 
     {
         return;
     }
-    
+
     assert(_dlssState.Initialized);
     assert(_dlssState.Handle);
     assert(_dlssState.Params);
@@ -374,7 +379,6 @@ void DLSS::Initialize(ID3D11Device* device, ID3D11DeviceContext* immediateContex
     Interop::On_Before_Present([]() {
         std::lock_guard _(_dlssState.Lock);
 
-        ID3D11RenderTargetView* match = nullptr;
         NVSDK_NGX_D3D11_DLSS_Eval_Params* params = _dlssState.PendingEvalParams.get();
 
         if (first && params) {
@@ -400,12 +404,9 @@ void DLSS::Initialize(ID3D11Device* device, ID3D11DeviceContext* immediateContex
                     validationFailure = true;
                 }
             }
-            
+
             if (!validationFailure) {
                 DISCARD(NGX_D3D11_EVALUATE_DLSS_EXT(D3D11::GetImmediateContext(), _dlssState.Handle, _dlssState.Params, params));
-            } else {
-                const float rgba[] = { 1.0f, 0.0f, 0.0f, 1.0f };
-                D3D11::GetImmediateContext()->ClearRenderTargetView(match, rgba);
             }
 
             params->Feature.pInColor->Release();

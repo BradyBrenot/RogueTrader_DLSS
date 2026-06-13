@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using UnityEngine;
@@ -8,15 +9,18 @@ namespace EnhancedGraphics.Upscalers;
 public class DlssUpscaler : IUpscaler {
     private bool _settingsDirty = false;
     private bool _regeneratePresets = false;
+    private bool _modeIsCustom = false;
 
     private QualityMode _mode;
     private EvaluationFlags _evalFlags;
-    
+
     private QualityMode Mode {
         get => _mode;
         set {
-            if (_mode.InputWidth == value.InputWidth && _mode.InputHeight == value.InputHeight && _mode.Preset == value.Preset) return;
-            
+            if (_mode.InputWidth == value.InputWidth && _mode.InputHeight == value.InputHeight &&
+                _mode.FinalWidth == value.FinalWidth && _mode.FinalHeight == value.FinalHeight &&
+                _mode.Preset == value.Preset) return;
+
             _mode = value;
             _settingsDirty = true;
         }
@@ -42,6 +46,7 @@ public class DlssUpscaler : IUpscaler {
     }
 
     public unsafe bool SetPreset(UpscalePreset preset, UpscaleFlags flags) {
+        _modeIsCustom = preset.Name == "Custom";
         Mode = new() {
             Preset = (DlssPreset)preset.Preset,
             InputWidth = (uint)preset.RenderResolution.x,
@@ -94,23 +99,24 @@ public class DlssUpscaler : IUpscaler {
             _regeneratePresets = true;
             UpscalePreset[] presets = GetAvailablePresets(displayResolution);
             
-            foreach(UpscalePreset preset in presets)
-            {
-                if (preset.Preset == (int)Mode.Preset) {
-                    Mode = new() {
-                        Preset = (DlssPreset)preset.Preset,
-                        InputWidth = (uint)preset.RenderResolution.x,
-                        InputHeight = (uint)preset.RenderResolution.y,
-                        FinalWidth = (uint)preset.DisplayResolution.x,
-                        FinalHeight = (uint)preset.DisplayResolution.y
-                    };
+            _settingsDirty = false;
+
+            if (!_modeIsCustom) {
+                foreach (UpscalePreset preset in presets) {
+                    if (preset.Preset == (int)Mode.Preset) {
+                        Mode = new() {
+                            Preset = (DlssPreset)preset.Preset,
+                            InputWidth = (uint)preset.RenderResolution.x,
+                            InputHeight = (uint)preset.RenderResolution.y,
+                            FinalWidth = (uint)preset.DisplayResolution.x,
+                            FinalHeight = (uint)preset.DisplayResolution.y
+                        };
+                    }
                 }
             }
-            
-            _settingsDirty = false;
         }
-        
-        if (_settingsDirty) {
+
+        if (_settingsDirty && !firstInit) {
             SetQualityModeNative(Mode, _evalFlags);
             _settingsDirty = false;
         }
@@ -128,20 +134,27 @@ public class DlssUpscaler : IUpscaler {
         QualityMode* qualityModes = stackalloc QualityMode[MAX_QUALITY_MODES];
         int numQualityModes = GetQualityModesNative((uint)displayResolution.x, (uint)displayResolution.y, qualityModes);
         Debug.Assert(numQualityModes <= MAX_QUALITY_MODES);
-        UpscalePreset[] ret = new UpscalePreset[numQualityModes];
-
-        if (numQualityModes <= 0) return ret;
+        List<UpscalePreset> ret = new(numQualityModes);
         
+        if (numQualityModes <= 0) return [];
+
+        
+
         for (int i = 0; i < numQualityModes; i++) {
-            ret[i] = new(
+            if (qualityModes[i].InputWidth == 0 || qualityModes[i].InputHeight == 0 ||
+                qualityModes[i].FinalWidth == 0 || qualityModes[i].FinalHeight == 0) {
+                continue;
+            }
+
+            ret.Add(new(
                 Preset: (int)qualityModes[i].Preset,
                 Name: PresetName(qualityModes[i].Preset),
                 RenderResolution: new(qualityModes[i].InputWidth, qualityModes[i].InputHeight),
                 DisplayResolution: new(qualityModes[i].FinalWidth, qualityModes[i].FinalHeight)
-            );
+            ));
         }
 
-        return ret;
+        return [.. ret];
     }
 
     [Flags]
